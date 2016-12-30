@@ -61,7 +61,7 @@ module.exports = NodeHelper.create({
             host: os.hostname(),
             token: secret
         }), {type: "png"});
-        code.pipe(fs.createWriteStream("modules/MMM-Mobileqr.png"));
+        code.pipe(fs.createWriteStream("modules/MMM-Mobile/qr.png"));
         this.qr = true;
         return crypto.createHash("sha256").update(secret).digest("base64");
     },
