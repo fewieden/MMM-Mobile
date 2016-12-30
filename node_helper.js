@@ -67,7 +67,7 @@ module.exports = NodeHelper.create({
     },
 
     getModules: function(){
-        var candidates = fs.readDirSync("modules");
+        var candidates = fs.readdirSync("modules");
         var ignore = ["node_modules", "default"];
         var modules = [];
         async.each(candidates, (candidate, callback) => {
