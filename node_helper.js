@@ -28,10 +28,10 @@ module.exports = NodeHelper.create({
 
     start: function() {
         if(fs.existsSync("modules/MMM-Mobile/mobile.json")){
-            this.mobile = JSON.parse(fs.readFileSync("modules/MMM-Mobile/mobile.json", "urf8"));
+            this.mobile = JSON.parse(fs.readFileSync("modules/MMM-Mobile/mobile.json", "utf8"));
         } else {
             this.mobile.user = this.generateSecret();
-            fs.writeFileSync("modules/MMM-Mobile/mobile.json", JSON.stringify(this.mobile), "urf8");
+            fs.writeFileSync("modules/MMM-Mobile/mobile.json", JSON.stringify(this.mobile), "utf8");
         }
 
         this.appSocket();
