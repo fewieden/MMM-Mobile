@@ -1,7 +1,7 @@
 {
   "name": "mmm-mobile",
   "version": "1.0.0",
-  "description": "",
+  "description": "middleware to configurate your MagicMirror via a mobile application",
   "scripts": {
     "preinstall": "node scripts/preinstall.js"
   },
