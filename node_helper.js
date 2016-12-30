@@ -137,7 +137,7 @@ module.exports = NodeHelper.create({
         });
         this.io.of(namespace).on("connection", (socket) => {
             socket.on("CONFIG", (data) => {
-                socket.emit("CONNECT", config);
+                socket.emit("CONFIG", config);
             });
             socket.on("INSTALLATIONS", (data) => {
                 socket.emit("INSTALLATIONS", this.mobile.modules);
