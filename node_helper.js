@@ -70,7 +70,7 @@ module.exports = NodeHelper.create({
         var candidates = fs.readDirSync("modules");
         var ignore = ["node_modules", "default"];
         var modules = [];
-        async.each(candidates, function(candidate, callback) {
+        async.each(candidates, (candidate, callback) => {
             if(ignore.indexOf(candidate) === -1 && fs.lstatSync("modules/"+candidate).isDirectory()){
                 var module = {
                     name: candidate.replace(/^MMM-/i, "").replace(/^MM-/i, ""),
@@ -78,7 +78,7 @@ module.exports = NodeHelper.create({
                     image: ""
                 };
                 var git = Git("modules/" + candidate);
-                git.getRemotes(true, function(err, res){
+                git.getRemotes(true, (err, res) => {
                     if(!err){
                         for(var i = 0; i < res.length; i++){
                             if(res[i].name === "origin"){
@@ -87,7 +87,7 @@ module.exports = NodeHelper.create({
                                 module.github_name = candidate;
                                 link = link.split("/");
                                 module.github_user = link[link.length - 2];
-                                git.fetch().status(function(err, res){
+                                git.fetch().status((err, res) => {
                                     if(!err){
                                         module.status = res;
                                         modules.push(module);
@@ -104,11 +104,11 @@ module.exports = NodeHelper.create({
             } else {
                 callback();
             }
-        }, function(err){
+        }, (err) => {
             if(err){
                 console.log(err);
             } else {
-                modules.sort(function(a, b){
+                modules.sort((a, b) => {
                     var name = a.name.toLowerCase();
                     var name2 = b.name.toLowerCase();
                     if(name < name2){
