@@ -1,6 +1,6 @@
 # MMM-Mobile
 
-This is a middleware to configurate your MagicMirror via a mobile application for iOs, Android and Windows Phone.
+This is a middleware to configurate your MagicMirror via a mobile application for iOS, Android and Windows Phone.
 
 ## Dependencies
   * An installation of [MagicMirror<sup>2</sup>](https://github.com/MichMich/MagicMirror)
