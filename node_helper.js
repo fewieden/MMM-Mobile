@@ -82,14 +82,18 @@ module.exports = NodeHelper.create({
                     if(!err){
                         for(var i = 0; i < res.length; i++){
                             if(res[i].name === "origin"){
-                                var link = res[i].refs.fetch;
-                                module.github_url = link.slice(0,-4);
-                                module.github_name = candidate;
-                                link = link.split("/");
+                                var link = res[i].refs.fetch.split("/");
                                 module.github_user = link[link.length - 2];
+                                module.github_name = candidate;
+                                module.github_url = "https://github.com/" + module.github_user + "/" +  module.github_name;
+                                link = link.split("/");
                                 git.fetch().status((err, res) => {
                                     if(!err){
-                                        module.status = res;
+                                        module.status = {
+                                            ahead: res.ahead,
+                                            behind: res.behind,
+                                            branch: res.current
+                                        };
                                         modules.push(module);
                                     }
                                     callback();
