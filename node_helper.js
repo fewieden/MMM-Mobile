@@ -86,7 +86,6 @@ module.exports = NodeHelper.create({
                                 module.github_user = link[link.length - 2];
                                 module.github_name = candidate;
                                 module.github_url = "https://github.com/" + module.github_user + "/" +  module.github_name;
-                                link = link.split("/");
                                 git.fetch().status((err, res) => {
                                     if(!err){
                                         module.status = {
