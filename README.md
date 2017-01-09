@@ -4,6 +4,12 @@ This is a middleware to configurate your MagicMirror via a mobile application fo
 
 ## Dependencies
   * An installation of [MagicMirror<sup>2</sup>](https://github.com/MichMich/MagicMirror)
+  * npm
+  * [socket.io](https://www.npmjs.com/package/socket.io)
+  * [qr-image](https://www.npmjs.com/package/qr-image)
+  * [simple-git](https://www.npmjs.com/package/simple-git)
+  * [async](https://www.npmjs.com/package/async)
+  * [moment](https://www.npmjs.com/package/moment)
 
 ## Installation
  1. Clone this repo into `~/MagicMirror/modules` directory.
