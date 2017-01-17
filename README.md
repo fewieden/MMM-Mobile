@@ -17,7 +17,19 @@ This is a middleware to configurate your MagicMirror via a mobile application fo
 
     ```
     {
+        module: "alert"
+    },
+    {
         module: "MMM-Mobile"
     }
     ```
  3. Run command `npm install` in `~/MagicMirror/modules/MMM-Mobile` directory.
+ 
+ It is important to also have the alert module in your config, otherwise you will not see the qr-code.
+
+## Config Options
+| **Option** | **Default** | **Description** |
+| --- | --- | --- |
+| `ip` | `false` | Enter the ip of your MagicMirror. Default uses the hostname. |
+| `qrSize` | `300` | Size of the qr-code in pixel |
+| `qrTimer` | `60 * 1000 (1 min)` | time to display qr-code. |

@@ -16,7 +16,7 @@ const async = require("async");
 const config = require("../../config/config.js");
 const moment = require("moment");
 const prefix = "var config = ";
-const suffix = ";if (typeof module !== 'undefined'){module.exports = config;}";
+const suffix = ";\nif (typeof module !== 'undefined'){module.exports = config;}";
 
 module.exports = NodeHelper.create({
 
@@ -31,7 +31,6 @@ module.exports = NodeHelper.create({
             this.mobile = JSON.parse(fs.readFileSync("modules/MMM-Mobile/mobile.json", "utf8"));
         } else {
             this.mobile.user = this.generateSecret();
-            fs.writeFileSync("modules/MMM-Mobile/mobile.json", JSON.stringify(this.mobile), "utf8");
         }
 
         this.appSocket();
@@ -44,13 +43,6 @@ module.exports = NodeHelper.create({
     socketNotificationReceived: function(notification, payload) {
         if(notification === "CONFIG"){
             this.mobile.config = payload;
-            if(this.qr){
-                this.sendSocketNotification("SHOW_QR");
-            }
-        } else if(notification === "CREATE_QR"){
-            if(this.qr){
-                this.sendSocketNotification("SHOW_QR");
-            }
         }
     },
 
@@ -58,11 +50,17 @@ module.exports = NodeHelper.create({
         var secret = crypto.randomBytes(128).toString('hex');
         var code = qrcode.image(JSON.stringify({
             port: config.port,
-            host: os.hostname(),
+            host: this.mobile.config.ip ? this.mobile.config.ip : os.hostname(),
             token: secret
         }), {type: "png"});
         code.pipe(fs.createWriteStream("modules/MMM-Mobile/qr.png"));
-        this.qr = true;
+        fs.writeFile("modules/MMM-Mobile/mobile.json", JSON.stringify(this.mobile, null, "\t"), "utf8", (err) => {
+            if(err){
+                console.log(this.name + ": Save settings failed!");
+                return;
+            }
+            this.sendSocketNotification("SHOW_QR");
+        });
         return crypto.createHash("sha256").update(secret).digest("base64");
     },
 
@@ -123,7 +121,13 @@ module.exports = NodeHelper.create({
                     }
                 });
                 this.mobile.modules = modules;
-                fs.writeFileSync("modules/MMM-Mobile/mobile.json", JSON.stringify(this.mobile), "utf8");
+                fs.writeFile("modules/MMM-Mobile/mobile.json", JSON.stringify(this.mobile, null, "\t"), "utf8", (err) => {
+                    if(err){
+                        console.log(this.name + ": Save modules failed!");
+                        return;
+                    }
+                    console.log(this.name + ": Saved modules!");
+                });
             }
         });
     },
@@ -133,24 +137,41 @@ module.exports = NodeHelper.create({
         this.io.of(namespace).use((socket, next) => {
             var hash = crypto.createHash("sha256").update(socket.handshake.query.token).digest("base64");
             if(this.mobile.user && this.mobile.user === hash){
+                console.log(this.name + ": Access granted!");
                 next();
             } else {
+                console.log(this.name + ": Authentication failed!");
                 next(new Error("Authentication failed!"));
             }
         });
         this.io.of(namespace).on("connection", (socket) => {
+            console.log(this.name + ": App connected!");
             socket.on("CONFIG", (data) => {
+                console.log(this.name + ": Config requested!");
                 socket.emit("CONFIG", config);
             });
             socket.on("INSTALLATIONS", (data) => {
+                console.log(this.name + ": Modules requested!");
                 socket.emit("INSTALLATIONS", this.mobile.modules);
             });
             socket.on("SYNC", (data) => {
-                fs.renameSync("config/config.js", "config/config.js." + moment().format() + ".backup");
-                fs.writeFileSync("config/config.js", prefix + JSON.stringify(data) + suffix, "utf8");
-                socket.emit("SYNC", {status: "SUCCESSFULLY_SYNCED"});
+                fs.rename("config/config.js", "config/config.js." + moment().format() + ".backup", (err) => {
+                    if(err){
+                        console.log(this.name + ": Sync failed!");
+                        socket.emit("SYNC", {status: "SYNC_FAILED"});
+                        return;
+                    }
+                    fs.writeFile("config/config.js", prefix + JSON.stringify(data, null, "\t") + suffix, "utf8", (err) => {
+                        if(err){
+                            console.log(this.name + ": Sync failed!");
+                            socket.emit("SYNC", {status: "SYNC_FAILED"});
+                            return;
+                        }
+                        console.log(this.name + ": Sync requested!");
+                        socket.emit("SYNC", {status: "SUCCESSFULLY_SYNCED"});
+                    });
+                });
             });
         });
     }
-
 });

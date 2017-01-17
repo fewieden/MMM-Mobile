@@ -8,6 +8,12 @@
 
 Module.register('MMM-Mobile',{
 
+    defaults: {
+        ip: false,
+        qrSize: 300,
+        qrTimer: 60 * 1000
+    },
+
     start: function(){
         Log.info("Starting module: " + this.name);
         this.sendSocketNotification("CONFIG", this.config);
@@ -32,8 +38,8 @@ Module.register('MMM-Mobile',{
             this.sendNotification("SHOW_ALERT", {
                 message: this.translate("SCAN_QR_CODE"),
                 imageUrl: this.file("qr.png"),
-                imageHeight: "300px",
-                timer: 60 * 1000
+                imageHeight: this.config.qrSize + "px",
+                timer: this.config.qrTimer
             });
         } else if(notification === "HIDE_QR"){
             this.sendNotification("HIDE_ALERT");

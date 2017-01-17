@@ -11,6 +11,7 @@ const config = require("../../../config/config.js");
 
 if(fs.existsSync("../../config/config.js")) {
     var file = fs.readFileSync("../../config/config.js", "utf8");
+    console.log("Creating Backup for config.js!");
     fs.writeFileSync("../../config/config.mobile_backup.js", file, "utf8");
 }
 
@@ -28,6 +29,7 @@ config.modules.sort((a, b) => {
     }
 });
 
-var file = "var config = " + JSON.stringify(config) + "; if(typeof module !== 'undefined'){module.exports = config;}";
+var file = "var config = " + JSON.stringify(config, null, "\t") + ";\nif(typeof module !== 'undefined'){module.exports = config;}";
 
+console.log("Saving updated config.js!");
 fs.writeFileSync("../../config/config.js", file, "utf8");
