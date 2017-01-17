@@ -68,6 +68,17 @@ module.exports = NodeHelper.create({
         var candidates = fs.readdirSync("modules");
         var ignore = ["node_modules", "default"];
         var modules = [];
+        var defaultmodules = require("modules/default/defaultmodules.js");
+
+        for(var i = 0; i < defaultmodules.length; i++){
+            modules.push({
+                "name": defaultmodules[i],
+                "github_user": "MagicMirror",
+                "installed": true,
+                "image": ""
+            });
+        }
+
         async.each(candidates, (candidate, callback) => {
             if(ignore.indexOf(candidate) === -1 && fs.lstatSync("modules/"+candidate).isDirectory()){
                 var module = {
