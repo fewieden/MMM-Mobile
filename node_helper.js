@@ -165,6 +165,15 @@ module.exports = NodeHelper.create({
                 console.log(this.name + ": Modules requested!");
                 socket.emit("INSTALLATIONS", this.mobile.modules);
             });
+            socket.on("INSTALL_MODULE", (data) => {
+                console.log(this.name + ": Install module requested!");
+
+                Git("modules").clone(data.url, "modules", (err, res) => {
+                    console.log(err);
+                    console.log(res);
+                    socket.emit("INSTALL_MODULE", {status: "success"});
+                });
+            });
             socket.on("SYNC", (data) => {
                 fs.rename("config/config.js", "config/config.js." + moment().format() + ".backup", (err) => {
                     if(err){
