@@ -192,12 +192,7 @@ module.exports = NodeHelper.create({
             });
             socket.on("INSTALL_MODULE_DEPENDENCIES", (data) => {
 
-                fs.stats("modules/" + data.name + "/package.json", (err, stats) => {
-                    if(err || !stats.isFile()){
-                        console.log(this.name + ": Install module dependencies failed!");
-                        socket.emit("INSTALL_MODULE_DEPENDENCIES", {error: err});
-                        return;
-                    }
+                if(fs.existsSync("modules/" + data.name + "/package.json")){
                     var pack = require("../" + data.name + "/package.json");
                     exec('npm install', {cwd: "modules/" + data.name}, (error, stdout, stderr) => {
                         if (error) {
@@ -220,7 +215,10 @@ module.exports = NodeHelper.create({
                             socket.emit("INSTALL_MODULE_DEPENDENCIES", {status: "success"});
                         }
                     });
-                });
+                } else {
+                    console.log(this.name + ": Install module dependencies failed!");
+                    socket.emit("INSTALL_MODULE_DEPENDENCIES", {error: err});
+                }
             });
             socket.on("SYNC", (data) => {
                 fs.rename("config/config.js", "config/config.js." + moment().format() + ".backup", (err) => {
