@@ -68,7 +68,7 @@ module.exports = NodeHelper.create({
         var candidates = fs.readdirSync("modules");
         var ignore = ["node_modules", "default"];
         var modules = [];
-        var defaultmodules = require("modules/default/defaultmodules.js");
+        var defaultmodules = require("../default/defaultmodules.js");
 
         for(var i = 0; i < defaultmodules.length; i++){
             modules.push({
@@ -166,12 +166,25 @@ module.exports = NodeHelper.create({
                 socket.emit("INSTALLATIONS", this.mobile.modules);
             });
             socket.on("INSTALL_MODULE", (data) => {
-                console.log(this.name + ": Install module requested!");
+                Git("modules").clone(data.url, data.name, (err, res) => {
+                    if(err){
+                        console.log(this.name + ": Install module failed!");
+                        socket.emit("INSTALL_MODULE", {error: error});
+                        return;
+                    }
+                    this.getModules();
+                    console.log(this.name + ": Installed module successfully!");
+                    socket.emit("INSTALL_MODULE", {status: "success"});
+                });
+            });
+            socket.on("UPDATE_MODULE", (data) => {
+                Git("modules/" + data.name).pull((err, res) => {
 
-                Git("modules").clone(data.url, "modules", (err, res) => {
                     console.log(err);
                     console.log(res);
-                    socket.emit("INSTALL_MODULE", {status: "success"});
+
+                    socket.emit("UPDATE_MODULE", {status: "success"});
+                    return;
                 });
             });
             socket.on("SYNC", (data) => {
