@@ -30,8 +30,6 @@ module.exports = NodeHelper.create({
     start: function() {
         if(fs.existsSync("modules/MMM-Mobile/mobile.json")){
             this.mobile = JSON.parse(fs.readFileSync("modules/MMM-Mobile/mobile.json", "utf8"));
-        } else {
-            this.mobile.user = this.generateSecret();
         }
 
         this.appSocket();
@@ -44,6 +42,7 @@ module.exports = NodeHelper.create({
     socketNotificationReceived: function(notification, payload) {
         if(notification === "CONFIG"){
             this.mobile.config = payload;
+            this.mobile.user = this.generateSecret();
         }
     },
 
