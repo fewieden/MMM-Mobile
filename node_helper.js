@@ -15,6 +15,7 @@ const Git = require("simple-git");
 const async = require("async");
 const config = require("../../config/config.js");
 const moment = require("moment");
+const exec = require('child_process').exec;
 const prefix = "var config = ";
 const suffix = ";\nif (typeof module !== 'undefined'){module.exports = config;}";
 
@@ -169,7 +170,7 @@ module.exports = NodeHelper.create({
                 Git("modules").clone(data.url, data.name, (err, res) => {
                     if(err){
                         console.log(this.name + ": Install module failed!");
-                        socket.emit("INSTALL_MODULE", {error: error});
+                        socket.emit("INSTALL_MODULE", {error: err});
                         return;
                     }
                     this.getModules();
@@ -180,11 +181,45 @@ module.exports = NodeHelper.create({
             socket.on("UPDATE_MODULE", (data) => {
                 Git("modules/" + data.name).pull((err, res) => {
 
-                    console.log(err);
-                    console.log(res);
-
+                    if(err){
+                        console.log(this.name + ": Updating module failed!");
+                        socket.emit("UPDATE_MODULE", {error: err});
+                        return;
+                    }
+                    console.log(this.name + ": Updated module successfully!");
                     socket.emit("UPDATE_MODULE", {status: "success"});
-                    return;
+                });
+            });
+            socket.on("INSTALL_MODULE_DEPENDENCIES", (data) => {
+
+                fs.stats("modules/" + data.name + "/package.json", (err, stats) => {
+                    if(err || !stats.isFile()){
+                        console.log(this.name + ": Install module dependencies failed!");
+                        socket.emit("INSTALL_MODULE_DEPENDENCIES", {error: err});
+                        return;
+                    }
+                    var pack = require("../" + data.name + "/package.json");
+                    exec('npm install', {cwd: "modules/" + data.name}, (error, stdout, stderr) => {
+                        if (error) {
+                            console.log(this.name + ": Install module dependencies failed!");
+                            socket.emit("INSTALL_MODULE_DEPENDENCIES", {error: err});
+                            return;
+                        }
+                        if(pack.hasOwnProperty("scripts") && pack.scripts.hasOwnProperty("module_dependencies")){
+                            exec('npm run module_dependencies', {cwd: "modules/" + data.name}, (error, stdout, stderr) => {
+                                if (error) {
+                                    console.log(this.name + ": Install module dependencies failed!");
+                                    socket.emit("INSTALL_MODULE_DEPENDENCIES", {error: err});
+                                    return;
+                                }
+                                console.log(this.name + ": Installed module dependencies successfully!");
+                                socket.emit("INSTALL_MODULE_DEPENDENCIES", {status: "success"});
+                            });
+                        } else {
+                            console.log(this.name + ": Installed module dependencies successfully!");
+                            socket.emit("INSTALL_MODULE_DEPENDENCIES", {status: "success"});
+                        }
+                    });
                 });
             });
             socket.on("SYNC", (data) => {
