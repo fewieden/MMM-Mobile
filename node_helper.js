@@ -216,7 +216,7 @@ module.exports = NodeHelper.create({
                     });
                 } else {
                     console.log(this.name + ": Install module dependencies failed!");
-                    socket.emit("INSTALL_MODULE_DEPENDENCIES", {error: err});
+                    socket.emit("INSTALL_MODULE_DEPENDENCIES", {error: "NO_DEPENDENCIES_DEFINED"});
                 }
             });
             socket.on("SYNC", (data) => {
