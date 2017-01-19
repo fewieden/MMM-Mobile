@@ -42,7 +42,11 @@ module.exports = NodeHelper.create({
     socketNotificationReceived: function(notification, payload) {
         if(notification === "CONFIG"){
             this.mobile.config = payload;
-            this.mobile.user = this.generateSecret();
+            if(!this.mobile.hasOwnProperty("user") || this.mobile.user == null){
+                this.mobile.user = this.generateSecret();
+            } else {
+                this.sendSocketNotification("SHOW_QR");
+            }
         }
     },
 
