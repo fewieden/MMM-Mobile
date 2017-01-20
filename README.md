@@ -11,6 +11,10 @@ This is a middleware to configurate your MagicMirror via a mobile application fo
   * [async](https://www.npmjs.com/package/async)
   * [moment](https://www.npmjs.com/package/moment)
 
+## Hostname
+Before using this module check if your network can resolve hostnames by accessing your mirror in your browser on another computer.
+If not you have to use the config option `ip`.
+
 ## Installation
  1. Clone this repo into `~/MagicMirror/modules` directory.
  2. Configure your `~/MagicMirror/config/config.js`:
