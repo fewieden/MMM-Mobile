@@ -43,6 +43,18 @@ Module.register('MMM-Mobile',{
             });
         } else if(notification === "HIDE_QR"){
             this.sendNotification("HIDE_ALERT");
+        } else if(notification === "SHOW_MODULES"){
+            MM.getModules().enumerate((module) => {
+                module.show(1000);
+            }).then(()=>{
+                this.sendNotification("MODULES_SHOWN", payload);
+            });
+        } else if(notification === "HIDE_MODULES"){
+            MM.getModules().enumerate((module) => {
+                module.hide(1000);
+            }).then(()=>{
+                this.sendNotification("MODULES_HIDDEN", payload);
+            });
         }
     }
 });

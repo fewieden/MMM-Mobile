@@ -43,6 +43,10 @@ module.exports = NodeHelper.create({
         if(notification === "CONFIG"){
             this.mobile.config = payload;
             this.mobile.user = this.generateSecret();
+        } else if(notification === "MODULES_SHOWN"){
+            payload.emit("SHOW_MODULES", {status: "success"});
+        } else if(notification === "MODULES_HIDDEN"){
+            payload.emit("HIDE_MODULES", {status: "success"});
         }
     },
 
@@ -69,14 +73,20 @@ module.exports = NodeHelper.create({
         var ignore = ["node_modules", "default"];
         var modules = [];
         var defaultmodules = require("../default/defaultmodules.js");
+        var calendar_config = require("configuration.json");
 
         for(var i = 0; i < defaultmodules.length; i++){
-            modules.push({
+            var module = {
                 "name": defaultmodules[i],
+                "github_name": defaultmodules[i],
                 "github_user": "MagicMirror",
                 "installed": true,
                 "image": ""
-            });
+            };
+            if(module.github_name == "calendar"){
+                module.config = calendar_config;
+            }
+            modules.push(module);
         }
 
         async.each(candidates, (candidate, callback) => {
@@ -196,14 +206,14 @@ module.exports = NodeHelper.create({
                     exec('npm install', {cwd: "modules/" + data.name}, (error, stdout, stderr) => {
                         if (error) {
                             console.log(this.name + ": Install module dependencies failed!");
-                            socket.emit("INSTALL_MODULE_DEPENDENCIES", {error: err});
+                            socket.emit("INSTALL_MODULE_DEPENDENCIES", {error: error});
                             return;
                         }
                         if(pack.hasOwnProperty("scripts") && pack.scripts.hasOwnProperty("module_dependencies")){
                             exec('npm run module_dependencies', {cwd: "modules/" + data.name}, (error, stdout, stderr) => {
                                 if (error) {
                                     console.log(this.name + ": Install module dependencies failed!");
-                                    socket.emit("INSTALL_MODULE_DEPENDENCIES", {error: err});
+                                    socket.emit("INSTALL_MODULE_DEPENDENCIES", {error: error});
                                     return;
                                 }
                                 console.log(this.name + ": Installed module dependencies successfully!");
@@ -236,6 +246,23 @@ module.exports = NodeHelper.create({
                         socket.emit("SYNC", {status: "SUCCESSFULLY_SYNCED"});
                     });
                 });
+            });
+            socket.on("RESTART_MIRROR", (data) => {
+                socket.emit("RESTART_MIRROR", {status: "WILL_BE_RESTARTED"});
+                exec('pm2 restart mm', (error) => {
+                    if (error) {
+                        console.log(this.name + ": Restarting mirror failed!");
+                        return;
+                    }
+                });
+            });
+            socket.on("SHOW_MODULES", (data) => {
+                console.log(this.name + ": Showing modules!");
+                this.sendSocketNotification("SHOW_MODULES", socket);
+            });
+            socket.on("HIDE_MODULES", (data) => {
+                console.log(this.name + ": Hiding modules!");
+                this.sendSocketNotification("HIDE_MODULES", socket);
             });
         });
     }
