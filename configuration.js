@@ -1,4 +1,4 @@
-{
+var config = {
     "config": {
         "values": {
             "Object": {
@@ -219,4 +219,6 @@
             }
         }
     }
-}
+};
+
+module.exports = config;
