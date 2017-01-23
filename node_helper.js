@@ -73,7 +73,7 @@ module.exports = NodeHelper.create({
         var ignore = ["node_modules", "default"];
         var modules = [];
         var defaultmodules = require("../default/defaultmodules.js");
-        var calendar_config = require("configuration.js");
+        var calendar_config = require(__dirname + "/configuration.js");
 
         for(var i = 0; i < defaultmodules.length; i++){
             var module = {
