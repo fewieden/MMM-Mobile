@@ -27,6 +27,9 @@ module.exports = NodeHelper.create({
         user: null
     },
 
+    show: null,
+    hide: null,
+
     start: function() {
         if(fs.existsSync("modules/MMM-Mobile/mobile.json")){
             this.mobile = JSON.parse(fs.readFileSync("modules/MMM-Mobile/mobile.json", "utf8"));
@@ -44,9 +47,9 @@ module.exports = NodeHelper.create({
             this.mobile.config = payload;
             this.mobile.user = this.generateSecret();
         } else if(notification === "MODULES_SHOWN"){
-            payload.emit("SHOW_MODULES", {status: "success"});
+            this.show.emit("SHOW_MODULES", {status: "success"});
         } else if(notification === "MODULES_HIDDEN"){
-            payload.emit("HIDE_MODULES", {status: "success"});
+            this.hide.emit("HIDE_MODULES", {status: "success"});
         }
     },
 
@@ -258,11 +261,13 @@ module.exports = NodeHelper.create({
             });
             socket.on("SHOW_MODULES", (data) => {
                 console.log(this.name + ": Showing modules!");
-                this.sendSocketNotification("SHOW_MODULES", socket);
+                this.show = socket;
+                this.sendSocketNotification("SHOW_MODULES");
             });
             socket.on("HIDE_MODULES", (data) => {
                 console.log(this.name + ": Hiding modules!");
-                this.sendSocketNotification("HIDE_MODULES", socket);
+                this.hide = socket;
+                this.sendSocketNotification("HIDE_MODULES");
             });
         });
     }

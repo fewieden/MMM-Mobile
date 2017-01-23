@@ -47,13 +47,13 @@ Module.register('MMM-Mobile',{
             MM.getModules().enumerate((module) => {
                 module.show(1000);
             }).then(()=>{
-                this.sendNotification("MODULES_SHOWN", payload);
+                this.sendNotification("MODULES_SHOWN");
             });
         } else if(notification === "HIDE_MODULES"){
             MM.getModules().enumerate((module) => {
                 module.hide(1000);
             }).then(()=>{
-                this.sendNotification("MODULES_HIDDEN", payload);
+                this.sendNotification("MODULES_HIDDEN");
             });
         }
     }
