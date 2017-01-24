@@ -46,7 +46,7 @@ module.exports = NodeHelper.create({
         if(notification === "CONFIG"){
             this.mobile.config = payload;
             if(!this.mobile.hasOwnProperty("user") || this.mobile.user == null){
-                this.mobile.user = this.generateSecret();
+                this.generateSecret();
             } else {
                 this.sendSocketNotification("SHOW_QR");
             }
@@ -65,14 +65,14 @@ module.exports = NodeHelper.create({
             token: secret
         }), {type: "png"});
         code.pipe(fs.createWriteStream("modules/MMM-Mobile/qr.png"));
-        fs.writeFile("modules/MMM-Mobile/mobile.json", JSON.stringify(this.mobile, null, "\t"), "utf8", (err) => {
+        this.mobile.user = crypto.createHash("sha256").update(secret).digest("base64");
+            fs.writeFile("modules/MMM-Mobile/mobile.json", JSON.stringify(this.mobile, null, "\t"), "utf8", (err) => {
             if(err){
                 console.log(this.name + ": Save settings failed!");
                 return;
             }
             this.sendSocketNotification("SHOW_QR");
         });
-        return crypto.createHash("sha256").update(secret).digest("base64");
     },
 
     getModules: function(){
