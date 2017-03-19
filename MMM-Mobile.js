@@ -23,7 +23,8 @@ Module.register('MMM-Mobile',{
         return {
             en: "translations/en.json",
             de: "translations/de.json",
-            es: "translations/es.json"
+            es: "translations/es.json",
+            es: "translations/id.json"
         };
     },
 
