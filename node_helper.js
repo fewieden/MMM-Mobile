@@ -5,19 +5,22 @@
  *
  * MIT Licensed.
  */
-const NodeHelper = require("node_helper");
-const io = require("socket.io");
-const fs = require("fs");
-const crypto = require("crypto");
-const os = require("os");
-const qrcode = require("qr-image");
-const Git = require("simple-git");
-const async = require("async");
-const config = require("../../config/config.js");
-const moment = require("moment");
+
+/* eslint-env node */
+
+const NodeHelper = require('node_helper');
+const fs = require('fs');
+const crypto = require('crypto');
+const os = require('os');
+const qrcode = require('qr-image');
+const Git = require('simple-git');
+const async = require('async');
+const config = require('../../config/config.js');
+const moment = require('moment');
 const exec = require('child_process').exec;
-const prefix = "var config = ";
-const suffix = ";\nif (typeof module !== 'undefined'){module.exports = config;}";
+
+const prefix = 'var config = ';
+const suffix = ';\nif (typeof module !== \'undefined\'){module.exports = config;}';
 
 module.exports = NodeHelper.create({
 
@@ -27,93 +30,91 @@ module.exports = NodeHelper.create({
         user: null
     },
 
-    show: null,
-    hide: null,
-
-    start: function() {
-        if(fs.existsSync("modules/MMM-Mobile/mobile.json")){
-            this.mobile = JSON.parse(fs.readFileSync("modules/MMM-Mobile/mobile.json", "utf8"));
+    start() {
+        console.log(`Starting module helper: ${this.name}`);
+        if (fs.existsSync('modules/MMM-Mobile/mobile.json')) {
+            this.mobile = JSON.parse(fs.readFileSync('modules/MMM-Mobile/mobile.json', 'utf8'));
         }
 
         this.appSocket();
         this.getModules();
         setInterval(() => {
             this.getModules();
-        }, 15*60*1000);
+        }, 15 * 60 * 1000);
     },
 
-    socketNotificationReceived: function(notification, payload) {
-        if(notification === "CONFIG"){
+    socketNotificationReceived(notification, payload) {
+        if (notification === 'CONFIG') {
             this.mobile.config = payload;
-            if(!this.mobile.hasOwnProperty("user") || this.mobile.user == null){
+            if (!Object.prototype.hasOwnProperty.call(this.mobile, 'user') || this.mobile.user == null) {
                 this.mobile.user = this.generateSecret();
             } else {
-                this.sendSocketNotification("SHOW_QR");
+                this.sendSocketNotification('SHOW_QR');
             }
-        } else if(notification === "MODULES_SHOWN"){
-            this.show.emit("SHOW_MODULES", {status: "success"});
-        } else if(notification === "MODULES_HIDDEN"){
-            this.hide.emit("HIDE_MODULES", {status: "success"});
         }
     },
 
-    generateSecret: function(){
-        var secret = crypto.randomBytes(128).toString('hex');
-        var code = qrcode.image(JSON.stringify({
+    generateSecret() {
+        const secret = crypto.randomBytes(128).toString('hex');
+        const code = qrcode.image(JSON.stringify({
             port: config.port,
             host: this.mobile.config.ip ? this.mobile.config.ip : os.hostname(),
             token: secret
-        }), {type: "png"});
-        code.pipe(fs.createWriteStream("modules/MMM-Mobile/qr.png"));
-        fs.writeFile("modules/MMM-Mobile/mobile.json", JSON.stringify(this.mobile, null, "\t"), "utf8", (err) => {
-            if(err){
-                console.log(this.name + ": Save settings failed!");
+        }), { type: 'png' });
+        code.pipe(fs.createWriteStream('modules/MMM-Mobile/qr.png'));
+        fs.writeFile('modules/MMM-Mobile/mobile.json', JSON.stringify(this.mobile, null, '\t'), 'utf8', (err) => {
+            if (err) {
+                console.log(`${this.name}: Save settings failed!`);
                 return;
             }
-            this.sendSocketNotification("SHOW_QR");
+            this.sendSocketNotification('SHOW_QR');
         });
-        return crypto.createHash("sha256").update(secret).digest("base64");
+        return crypto.createHash('sha256').update(secret).digest('base64');
     },
 
-    getModules: function(){
-        var candidates = fs.readdirSync("modules");
-        var ignore = ["node_modules", "default"];
-        var modules = [];
-        var defaultmodules = require("../default/defaultmodules.js");
-        var calendar_config = require(__dirname + "/configuration.js");
+    getModules() {
+        const candidates = fs.readdirSync('modules');
+        const ignore = ['node_modules', 'default'];
+        const modules = [];
 
-        for(var i = 0; i < defaultmodules.length; i++){
-            var module = {
-                "name": defaultmodules[i],
-                "github_name": defaultmodules[i],
-                "github_user": "MagicMirror",
-                "installed": true,
-                "image": ""
+        // eslint-disable-next-line global-require
+        const defaultmodules = require('../default/defaultmodules.js');
+
+        // eslint-disable-next-line global-require
+        const calendarConfig = require('../MMM-Mobile/configuration.js');
+
+        for (let i = 0; i < defaultmodules.length; i += 1) {
+            const module = {
+                name: defaultmodules[i],
+                github_name: defaultmodules[i],
+                github_user: 'MagicMirror',
+                installed: true,
+                image: ''
             };
-            if(module.github_name == "calendar"){
-                module.config = calendar_config;
+            if (module.github_name === 'calendar') {
+                module.config = calendarConfig;
             }
             modules.push(module);
         }
 
         async.each(candidates, (candidate, callback) => {
-            if(ignore.indexOf(candidate) === -1 && fs.lstatSync("modules/"+candidate).isDirectory()){
-                var module = {
-                    name: candidate.replace(/^MMM-/i, "").replace(/^MM-/i, ""),
+            if (ignore.indexOf(candidate) === -1 && fs.lstatSync(`modules/${candidate}`).isDirectory()) {
+                const module = {
+                    name: candidate.replace(/^MMM-/i, '').replace(/^MM-/i, ''),
                     installed: true,
-                    image: ""
+                    image: ''
                 };
-                var git = Git("modules/" + candidate);
-                git.getRemotes(true, (err, res) => {
-                    if(!err){
-                        for(var i = 0; i < res.length; i++){
-                            if(res[i].name === "origin"){
-                                var link = res[i].refs.fetch.split("/");
+                const git = Git(`modules/${candidate}`);
+                git.getRemotes(true, (error, result) => {
+                    if (!error) {
+                        for (let i = 0; i < result.length; i += 1) {
+                            if (result[i].name === 'origin') {
+                                const link = result[i].refs.fetch.split('/');
                                 module.github_user = link[link.length - 2];
                                 module.github_name = candidate;
-                                module.github_url = "https://github.com/" + module.github_user + "/" +  module.github_name;
+                                module.github_url = `https://github.com/${module.github_user}/${module.github_name}`;
                                 git.fetch().status((err, res) => {
-                                    if(!err){
+                                    if (!err) {
                                         module.status = {
                                             ahead: res.ahead,
                                             behind: res.behind,
@@ -133,145 +134,165 @@ module.exports = NodeHelper.create({
             } else {
                 callback();
             }
-        }, (err) => {
-            if(err){
-                console.log(err);
+        }, (error) => {
+            if (error) {
+                console.log(error);
             } else {
                 modules.sort((a, b) => {
-                    var name = a.name.toLowerCase();
-                    var name2 = b.name.toLowerCase();
-                    if(name < name2){
+                    const name = a.name.toLowerCase();
+                    const name2 = b.name.toLowerCase();
+                    if (name < name2) {
                         return -1;
-                    } else if(name >name2){
+                    } else if (name > name2) {
                         return 1;
-                    } else {
-                        return 0;
                     }
+                    return 0;
                 });
                 this.mobile.modules = modules;
-                fs.writeFile("modules/MMM-Mobile/mobile.json", JSON.stringify(this.mobile, null, "\t"), "utf8", (err) => {
-                    if(err){
-                        console.log(this.name + ": Save modules failed!");
+                fs.writeFile('modules/MMM-Mobile/mobile.json', JSON.stringify(this.mobile, null, '\t'), 'utf8', (err) => {
+                    if (err) {
+                        console.log(`${this.name}: Save modules failed!`);
                         return;
                     }
-                    console.log(this.name + ": Saved modules!");
+                    console.log(`${this.name}: Saved modules!`);
                 });
             }
         });
     },
 
-    appSocket: function(){
-        var namespace = this.name + "/app";
+    appSocket() {
+        const namespace = `${this.name}/app`;
+
         this.io.of(namespace).use((socket, next) => {
-            var hash = crypto.createHash("sha256").update(socket.handshake.query.token).digest("base64");
-            if(this.mobile.user && this.mobile.user === hash){
-                console.log(this.name + ": Access granted!");
+            const hash = crypto.createHash('sha256').update(socket.handshake.query.token).digest('base64');
+            if (this.mobile.user && this.mobile.user === hash) {
+                console.log(`${this.name}: Access granted!`);
                 next();
             } else {
-                console.log(this.name + ": Authentication failed!");
-                next(new Error("Authentication failed!"));
+                console.log(`${this.name}: Authentication failed!`);
+                next(new Error('Authentication failed!'));
             }
         });
-        this.io.of(namespace).on("connection", (socket) => {
-            console.log(this.name + ": App connected!");
-            socket.on("CONFIG", (data) => {
-                console.log(this.name + ": Config requested!");
-                socket.emit("CONFIG", config);
-            });
-            socket.on("INSTALLATIONS", (data) => {
-                console.log(this.name + ": Modules requested!");
-                socket.emit("INSTALLATIONS", this.mobile.modules);
-            });
-            socket.on("INSTALL_MODULE", (data) => {
-                Git("modules").clone(data.url, data.name, (err, res) => {
-                    if(err){
-                        console.log(this.name + ": Install module failed!");
-                        socket.emit("INSTALL_MODULE", {error: err});
-                        return;
-                    }
-                    this.getModules();
-                    console.log(this.name + ": Installed module successfully!");
-                    socket.emit("INSTALL_MODULE", {status: "success"});
-                });
-            });
-            socket.on("UPDATE_MODULE", (data) => {
-                Git("modules/" + data.name).pull((err, res) => {
 
-                    if(err){
-                        console.log(this.name + ": Updating module failed!");
-                        socket.emit("UPDATE_MODULE", {error: err});
-                        return;
-                    }
-                    console.log(this.name + ": Updated module successfully!");
-                    socket.emit("UPDATE_MODULE", {status: "success"});
-                });
-            });
-            socket.on("INSTALL_MODULE_DEPENDENCIES", (data) => {
+        this.io.of(namespace).on('connection', (socket) => {
+            console.log(`${this.name}: App connected!`);
 
-                if(fs.existsSync("modules/" + data.name + "/package.json")){
-                    var pack = require("../" + data.name + "/package.json");
-                    exec('npm install', {cwd: "modules/" + data.name}, (error, stdout, stderr) => {
-                        if (error) {
-                            console.log(this.name + ": Install module dependencies failed!");
-                            socket.emit("INSTALL_MODULE_DEPENDENCIES", {error: error});
-                            return;
-                        }
-                        if(pack.hasOwnProperty("scripts") && pack.scripts.hasOwnProperty("module_dependencies")){
-                            exec('npm run module_dependencies', {cwd: "modules/" + data.name}, (error, stdout, stderr) => {
-                                if (error) {
-                                    console.log(this.name + ": Install module dependencies failed!");
-                                    socket.emit("INSTALL_MODULE_DEPENDENCIES", {error: error});
-                                    return;
-                                }
-                                console.log(this.name + ": Installed module dependencies successfully!");
-                                socket.emit("INSTALL_MODULE_DEPENDENCIES", {status: "success"});
-                            });
-                        } else {
-                            console.log(this.name + ": Installed module dependencies successfully!");
-                            socket.emit("INSTALL_MODULE_DEPENDENCIES", {status: "success"});
-                        }
-                    });
-                } else {
-                    console.log(this.name + ": Install module dependencies failed!");
-                    socket.emit("INSTALL_MODULE_DEPENDENCIES", {error: "NO_DEPENDENCIES_DEFINED"});
-                }
+            socket.on('CONFIG', () => {
+                console.log(`${this.name}: Config requested!`);
+                socket.emit('CONFIG', config);
             });
-            socket.on("SYNC", (data) => {
-                fs.rename("config/config.js", "config/config.js." + moment().format() + ".backup", (err) => {
-                    if(err){
-                        console.log(this.name + ": Sync failed!");
-                        socket.emit("SYNC", {status: "SYNC_FAILED"});
-                        return;
-                    }
-                    fs.writeFile("config/config.js", prefix + JSON.stringify(data, null, "\t") + suffix, "utf8", (err) => {
-                        if(err){
-                            console.log(this.name + ": Sync failed!");
-                            socket.emit("SYNC", {status: "SYNC_FAILED"});
-                            return;
-                        }
-                        console.log(this.name + ": Sync requested!");
-                        socket.emit("SYNC", {status: "SUCCESSFULLY_SYNCED"});
-                    });
-                });
+
+            socket.on('INSTALLATIONS', () => {
+                console.log(`${this.name}: Modules requested!`);
+                socket.emit('INSTALLATIONS', this.mobile.modules);
             });
-            socket.on("RESTART_MIRROR", (data) => {
-                socket.emit("RESTART_MIRROR", {status: "WILL_BE_RESTARTED"});
+
+            socket.on('INSTALL_MODULE', (data) => {
+                this.installModule(socket, data);
+            });
+
+            socket.on('UPDATE_MODULE', (data) => {
+                this.updateModule(socket, data);
+            });
+
+            socket.on('INSTALL_MODULE_DEPENDENCIES', (data) => {
+                this.installModuleDependencies(socket, data);
+            });
+
+            socket.on('SYNC', (data) => {
+                this.sync(socket, data);
+            });
+            socket.on('RESTART_MIRROR', () => {
+                socket.emit('RESTART_MIRROR', { status: 'WILL_BE_RESTARTED' });
                 exec('pm2 restart mm', (error) => {
                     if (error) {
-                        console.log(this.name + ": Restarting mirror failed!");
-                        return;
+                        console.log(`${this.name}: Restarting mirror failed!`);
                     }
                 });
             });
-            socket.on("SHOW_MODULES", (data) => {
-                console.log(this.name + ": Showing modules!");
-                this.show = socket;
-                this.sendSocketNotification("SHOW_MODULES");
+            socket.on('SHOW_MODULES', () => {
+                console.log(`${this.name}: Showing modules!`);
+                this.sendSocketNotification('SHOW_MODULES');
             });
-            socket.on("HIDE_MODULES", (data) => {
-                console.log(this.name + ": Hiding modules!");
-                this.hide = socket;
-                this.sendSocketNotification("HIDE_MODULES");
+            socket.on('HIDE_MODULES', () => {
+                console.log(`${this.name}: Hiding modules!`);
+                this.sendSocketNotification('HIDE_MODULES');
+            });
+        });
+    },
+
+    installModule(socket, data) {
+        Git('modules').clone(data.url, data.name, (err) => {
+            if (err) {
+                console.log(`${this.name}: Install module failed!`);
+                socket.emit('INSTALL_MODULE', { error: err });
+                return;
+            }
+            this.getModules();
+            console.log(`${this.name}: Installed module successfully!`);
+            socket.emit('INSTALL_MODULE', { status: 'success' });
+        });
+    },
+
+    updateModule(socket, data) {
+        Git(`modules/${data.name}`).pull((err) => {
+            if (err) {
+                console.log(`${this.name}: Updating module failed!`);
+                socket.emit('UPDATE_MODULE', { error: err });
+                return;
+            }
+            console.log(`${this.name}: Updated module successfully!`);
+            socket.emit('UPDATE_MODULE', { status: 'success' });
+        });
+    },
+
+    installModuleDependencies(socket, data) {
+        if (fs.existsSync(`modules/${data.name}/package.json`)) {
+            // eslint-disable-next-line global-require, import/no-dynamic-require
+            const pack = require(`../${data.name}/package.json`);
+            exec('npm install', { cwd: `modules/${data.name}` }, (error) => {
+                if (error) {
+                    console.log(`${this.name}: Install module dependencies failed!`);
+                    socket.emit('INSTALL_MODULE_DEPENDENCIES', { error });
+                    return;
+                }
+                if (Object.prototype.hasOwnProperty.call(pack, 'scripts') &&
+                    Object.prototype.hasOwnProperty.call(pack.scripts, 'module_dependencies')) {
+                    exec('npm run module_dependencies', { cwd: `modules/${data.name}` }, (err) => {
+                        if (err) {
+                            console.log(`${this.name}: Install module dependencies failed!`);
+                            socket.emit('INSTALL_MODULE_DEPENDENCIES', { err });
+                            return;
+                        }
+                        console.log(`${this.name}: Installed module dependencies successfully!`);
+                        socket.emit('INSTALL_MODULE_DEPENDENCIES', { status: 'success' });
+                    });
+                } else {
+                    console.log(`${this.name}: Installed module dependencies successfully!`);
+                    socket.emit('INSTALL_MODULE_DEPENDENCIES', { status: 'success' });
+                }
+            });
+        } else {
+            console.log(`${this.name}: Install module dependencies failed!`);
+            socket.emit('INSTALL_MODULE_DEPENDENCIES', { error: 'NO_DEPENDENCIES_DEFINED' });
+        }
+    },
+
+    sync(socket, data) {
+        fs.rename('config/config.js', `config/config.js.${moment().format()}.backup`, (err) => {
+            if (err) {
+                console.log(`${this.name}: Sync failed!`);
+                socket.emit('SYNC', { status: 'SYNC_FAILED' });
+                return;
+            }
+            fs.writeFile('config/config.js', prefix + JSON.stringify(data, null, '\t') + suffix, 'utf8', (error) => {
+                if (error) {
+                    console.log(`${this.name}: Sync failed!`);
+                    socket.emit('SYNC', { status: 'SYNC_FAILED' });
+                    return;
+                }
+                console.log(`${this.name}: Sync requested!`);
+                socket.emit('SYNC', { status: 'SUCCESSFULLY_SYNCED' });
             });
         });
     }

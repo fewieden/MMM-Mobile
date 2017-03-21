@@ -6,30 +6,31 @@
  * MIT Licensed.
  */
 
-const fs = require("fs");
-const config = require("../../../config/config.js");
+/* eslint-env node */
 
-if(fs.existsSync("../../config/config.js")) {
-    var file = fs.readFileSync("../../config/config.js", "utf8");
-    console.log("Creating Backup for config.js!");
-    fs.writeFileSync("../../config/config.mobile_backup.js", file, "utf8");
+const fs = require('fs');
+const config = require('../../../config/config.js');
+
+if (fs.existsSync('../../config/config.js')) {
+    const file = fs.readFileSync('../../config/config.js', 'utf8');
+    console.log('Creating Backup for config.js!');
+    fs.writeFileSync('../../config/config.mobile_backup.js', file, 'utf8');
 }
 
 config.modules.sort((a, b) => {
-    if(!a.hasOwnProperty("position")){
+    if (!Object.prototype.hasOwnProperty.call(a, 'position')) {
         return -1;
-    } else if(!b.hasOwnProperty("position")){
+    } else if (!Object.prototype.hasOwnProperty.call(b, 'position')) {
         return 1;
-    } else if(a.position < b.position){
+    } else if (a.position < b.position) {
         return -1;
-    } else if(a.position > b.position){
+    } else if (a.position > b.position) {
         return 1;
-    } else {
-        return 0;
     }
+    return 0;
 });
 
-var file = "var config = " + JSON.stringify(config, null, "\t") + ";\nif(typeof module !== 'undefined'){module.exports = config;}";
+const file = `var config = ${JSON.stringify(config, null, '\t')};\nif(typeof module !== 'undefined'){module.exports = config;}`;
 
-console.log("Saving updated config.js!");
-fs.writeFileSync("../../config/config.js", file, "utf8");
+console.log('Saving updated config.js!');
+fs.writeFileSync('../../config/config.js', file, 'utf8');
