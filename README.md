@@ -32,7 +32,7 @@ If not you have to use the config option `ip`.
     ```
 
 1. Run command `npm install` in `~/MagicMirror/modules/MMM-Mobile` directory.
- 
+
 It is important to also have the alert module in your config, otherwise you will not see the qr-code.
 
 ## Config Options
