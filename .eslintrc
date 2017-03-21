@@ -1,0 +1,24 @@
+{
+    "extends": "airbnb-base",
+    "rules": {
+        "comma-dangle": 0,
+        "indent": [2, 4],
+        "max-len": [2, 120, { "ignoreStrings": true }],
+        "radix": [2, "as-needed"],
+        "no-console": 0
+    },
+    "settings": {
+        "import/core-modules": [
+            "node_helper",
+            "../../config/config.js",
+            "../default/defaultmodules.js",
+            "configuration.js",
+            "../../../config/config.js"
+        ]
+    },
+    "env": {
+        "browser": true,
+        "node": true,
+        "es6": true
+    }
+}
