@@ -202,6 +202,7 @@ module.exports = NodeHelper.create({
             socket.on('SYNC', (data) => {
                 this.sync(socket, data);
             });
+
             socket.on('RESTART_MIRROR', () => {
                 socket.emit('RESTART_MIRROR', { status: 'WILL_BE_RESTARTED' });
                 exec('pm2 restart mm', (error) => {
@@ -210,10 +211,12 @@ module.exports = NodeHelper.create({
                     }
                 });
             });
+
             socket.on('SHOW_MODULES', () => {
                 console.log(`${this.name}: Showing modules!`);
                 this.sendSocketNotification('SHOW_MODULES');
             });
+
             socket.on('HIDE_MODULES', () => {
                 console.log(`${this.name}: Hiding modules!`);
                 this.sendSocketNotification('HIDE_MODULES');
@@ -222,28 +225,26 @@ module.exports = NodeHelper.create({
     },
 
     installModule(socket, data) {
-        Git('modules').clone(data.url, data.name, (err) => {
-            if (err) {
-                console.log(`${this.name}: Install module failed!`);
-                socket.emit('INSTALL_MODULE', { error: err });
-                return;
-            }
-            this.getModules();
-            console.log(`${this.name}: Installed module successfully!`);
-            socket.emit('INSTALL_MODULE', { status: 'success' });
+        Git('modules').clone(data.url, data.name, (error) => {
+            this.requestResponse(socket, 'INSTALL_MODULE', error);
         });
     },
 
     updateModule(socket, data) {
-        Git(`modules/${data.name}`).pull((err) => {
-            if (err) {
-                console.log(`${this.name}: Updating module failed!`);
-                socket.emit('UPDATE_MODULE', { error: err });
-                return;
-            }
-            console.log(`${this.name}: Updated module successfully!`);
-            socket.emit('UPDATE_MODULE', { status: 'success' });
+        Git(`modules/${data.name}`).pull((error) => {
+            this.requestResponse(socket, 'UPDATE_MODULE', error);
         });
+    },
+
+    requestResponse(socket, msg, error) {
+        if (error) {
+            console.log(`${this.name}: ${msg} failed!`);
+            socket.emit(msg, { error });
+        } else {
+            this.getModules();
+            console.log(`${this.name}: ${msg} successfully!`);
+            socket.emit(msg, { status: 'success' });
+        }
     },
 
     installModuleDependencies(socket, data) {
@@ -252,48 +253,56 @@ module.exports = NodeHelper.create({
             const pack = require(`../${data.name}/package.json`);
             exec('npm install', { cwd: `modules/${data.name}` }, (error) => {
                 if (error) {
-                    console.log(`${this.name}: Install module dependencies failed!`);
-                    socket.emit('INSTALL_MODULE_DEPENDENCIES', { error });
+                    this.installModuleDependenciesFail(socket, error);
                     return;
                 }
                 if (Object.prototype.hasOwnProperty.call(pack, 'scripts') &&
                     Object.prototype.hasOwnProperty.call(pack.scripts, 'module_dependencies')) {
                     exec('npm run module_dependencies', { cwd: `modules/${data.name}` }, (err) => {
                         if (err) {
-                            console.log(`${this.name}: Install module dependencies failed!`);
-                            socket.emit('INSTALL_MODULE_DEPENDENCIES', { err });
-                            return;
+                            this.installModuleDependenciesFail(socket, err);
+                        } else {
+                            this.installModuleDependenciesSuccess(socket);
                         }
-                        console.log(`${this.name}: Installed module dependencies successfully!`);
-                        socket.emit('INSTALL_MODULE_DEPENDENCIES', { status: 'success' });
                     });
                 } else {
-                    console.log(`${this.name}: Installed module dependencies successfully!`);
-                    socket.emit('INSTALL_MODULE_DEPENDENCIES', { status: 'success' });
+                    this.installModuleDependenciesSuccess(socket);
                 }
             });
         } else {
-            console.log(`${this.name}: Install module dependencies failed!`);
-            socket.emit('INSTALL_MODULE_DEPENDENCIES', { error: 'NO_DEPENDENCIES_DEFINED' });
+            this.installModuleDependenciesFail(socket, 'NO_DEPENDENCIES_DEFINED');
         }
+    },
+
+    installModuleDependenciesSuccess(socket) {
+        console.log(`${this.name}: Installed module dependencies successfully!`);
+        socket.emit('INSTALL_MODULE_DEPENDENCIES', { status: 'success' });
+    },
+
+    installModuleDependenciesFail(socket, error) {
+        console.log(`${this.name}: Install module dependencies failed!`);
+        socket.emit('INSTALL_MODULE_DEPENDENCIES', { error });
     },
 
     sync(socket, data) {
         fs.rename('config/config.js', `config/config.js.${moment().format()}.backup`, (err) => {
             if (err) {
-                console.log(`${this.name}: Sync failed!`);
-                socket.emit('SYNC', { status: 'SYNC_FAILED' });
+                this.syncFailed(socket);
                 return;
             }
             fs.writeFile('config/config.js', prefix + JSON.stringify(data, null, '\t') + suffix, 'utf8', (error) => {
                 if (error) {
-                    console.log(`${this.name}: Sync failed!`);
-                    socket.emit('SYNC', { status: 'SYNC_FAILED' });
-                    return;
+                    this.syncFailed(socket);
+                } else {
+                    console.log(`${this.name}: Sync requested!`);
+                    socket.emit('SYNC', { status: 'SUCCESSFULLY_SYNCED' });
                 }
-                console.log(`${this.name}: Sync requested!`);
-                socket.emit('SYNC', { status: 'SUCCESSFULLY_SYNCED' });
             });
         });
+    },
+
+    syncFailed(socket) {
+        console.log(`${this.name}: Sync failed!`);
+        socket.emit('SYNC', { status: 'SYNC_FAILED' });
     }
 });
