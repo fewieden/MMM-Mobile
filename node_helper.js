@@ -60,11 +60,11 @@ module.exports = NodeHelper.create({
             port: config.port,
             host: this.mobile.config.ip ? this.mobile.config.ip : os.hostname(),
             token: secret
-        }), {type: 'png'});
+        }), { type: 'png' });
         code.pipe(fs.createWriteStream('modules/MMM-Mobile/qr.png'));
         this.mobile.user = crypto.createHash('sha256').update(secret).digest('base64');
-            fs.writeFile('modules/MMM-Mobile/mobile.json', JSON.stringify(this.mobile, null, '\t'), 'utf8', (err) => {
-            if(err){
+        fs.writeFile('modules/MMM-Mobile/mobile.json', JSON.stringify(this.mobile, null, '\t'), 'utf8', (err) => {
+            if (err) {
                 console.log(`${this.name}: Save settings failed!`);
                 return;
             }
