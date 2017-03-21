@@ -24,7 +24,7 @@ Module.register('MMM-Mobile',{
             en: "translations/en.json",
             de: "translations/de.json",
             es: "translations/es.json",
-            es: "translations/id.json"
+            id: "translations/id.json"
         };
     },
 
