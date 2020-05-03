@@ -4,7 +4,9 @@
   "description": "middleware to configurate your MagicMirror via a mobile application",
   "scripts": {
     "preinstall": "node scripts/preinstall.js",
-    "lint": "./node_modules/.bin/eslint ."
+    "lint": "./node_modules/.bin/eslint .",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "repository": {
     "type": "git",
@@ -29,6 +31,8 @@
     "async": "^2.1.4",
     "moment": "^2.17.1",
     "qr-image": "^3.1.0",
-    "simple-git": "^1.65.0"
-  }
+    "simple-git": "^1.65.0",
+    "snyk": "^1.316.2"
+  },
+  "snyk": true
 }
